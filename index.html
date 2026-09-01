@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Calculator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="calculator">
+        <!-- Input field accepts physical keyboard entries -->
+        <input type="text" id="display" placeholder="0">
+        
+        <div class="buttons">
+            <button onclick="appendValue('7')">7</button>
+            <button onclick="appendValue('8')">8</button>
+            <button onclick="appendValue('9')">9</button>
+            <button onclick="appendValue('+')" class="operator">+</button>
+            <button onclick="clearDisplay()" class="operator">C</button>
+
+            <button onclick="appendValue('4')">4</button>
+            <button onclick="appendValue('5')">5</button>
+            <button onclick="appendValue('6')">6</button>
+            <button onclick="appendValue('-')" class="operator">-</button>
+            <button onclick="appendValue('*')" class="operator">*</button>
+
+            <button onclick="appendValue('1')">1</button>
+            <button onclick="appendValue('2')">2</button>
+            <button onclick="appendValue('3')">3</button>
+            <button onclick="appendValue('/')" class="operator">/</button>
+            <button onclick="appendValue('(')" class="operator">(</button>
+
+            <button onclick="appendValue('0')" class="zero">0</button>
+            <button onclick="appendValue('.')">.</button>
+            <button onclick="appendValue(')')" class="operator">)</button>
+            <button onclick="calculateResult()" class="equal">=</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+
+        function appendValue(val) {
+            display.value += val;
+        }
+
+        function clearDisplay() {
+            display.value = '';
+        }
+
+        async function calculateResult() {
+            if (!display.value) return;
+
+            const response = await fetch('/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ expression: display.value })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                display.value = data.result;
+            } else {
+                display.value = data.error;
+            }
+        }
+
+        // Enable laptop keyboard controls
+        document.addEventListener('keydown', function(event) {
+            const allowedKeys = '0123456789+-*/.()';
+            
+            if (allowedKeys.includes(event.key)) {
+                // Focus display if typing numbers or operators directly
+                if (document.activeElement !== display) {
+                    appendValue(event.key);
+                }
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                calculateResult();
+            } else if (event.key === 'Escape') {
+                clearDisplay();
+            }
+        });
+    </script>
+</body>
+</html>
